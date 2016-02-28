@@ -1,22 +1,38 @@
 package main
 
 import (
+	"bufio"
 	"encoding/base64"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"net/http"
+	"os"
 )
 
-func RegisterAndListen(clientMsg string) {
-	ServerUsername := "administrator"
-	ServerPassword := "piopio"
+func CommandLine() (error, string) {
+	bio := bufio.NewReader(os.Stdin)
+	if line, hasMore, err := bio.ReadLine(); hasMore == false {
+		if err != nil {
+			return err, ""
+		} else {
+			return nil, string(line)
+		}
+	}
+	return nil, ""
+}
 
-	config, err := websocket.NewConfig("ws://192.168.1.105:9000", "ws://172.16.162.131")
+func Close(ws *websocket.Conn) {
+	ws.Close()
+}
+
+func RegisterAndListen(dest, src, Username, Password string) {
+
+	config, err := websocket.NewConfig(dest, src)
 	if err != nil {
 		fmt.Println("NewConfig failed ! :(")
 
 	}
-	message := ServerUsername + ":" + ServerPassword
+	message := Username + ":" + Password
 	usrpasswd := make([]byte, base64.StdEncoding.EncodedLen(len(message)))
 	base64.StdEncoding.Encode(usrpasswd, []byte(message))
 	config.Header = make(http.Header)
@@ -31,15 +47,29 @@ func RegisterAndListen(clientMsg string) {
 			fmt.Println("some error")
 		}
 	} else {
-		//	msgMarshalled, err := proto.Marshal(clientMsg)
-		//		err != nil{
-		//fmt.Println("marshalling error")
-		//		}
-		fmt.Println("No error, message sending")
-		websocket.Message.Send(webs, clientMsg)
+		for {
+			err, line := CommandLine()
+			if err == nil && line != "quit" {
+				fmt.Println("Sent")
+				websocket.Message.Send(webs, line)
+			} else if err != nil {
+				fmt.Println("Error, please type again")
+				continue
+			}
+			if line == "quit" {
+				break
+			}
+		}
 	}
+	Close(webs)
 }
 
 func main() {
-	RegisterAndListen("I am Sam")
+	// set IP:port of server and client here
+	dest := "ws://192.168.1.105:9000"
+	src := "ws://172.16.162.131"
+	Username := "administrator"
+	Password := "p"
+
+	RegisterAndListen(dest, src, Username, Password)
 }
