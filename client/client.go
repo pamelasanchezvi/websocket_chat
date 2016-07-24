@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
+	"github.com/robertkrimen/otto"
 	"golang.org/x/net/websocket"
 	"net/http"
 	"os"
@@ -19,6 +20,13 @@ func CommandLine() (error, string) {
 		}
 	}
 	return nil, ""
+}
+
+func JavaScript_Console(msg string) {
+	vm := otto.New()
+	vm.Run(`
+		console.log(msg);
+		`)
 }
 
 func Close(ws *websocket.Conn) {
