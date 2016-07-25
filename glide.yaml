@@ -1,0 +1,6 @@
+package: github.com/pamelasanvi/websocket_chat
+import:
+- package: github.com/robertkrimen/otto
+- package: golang.org/x/net
+  subpackages:
+  - websocket
